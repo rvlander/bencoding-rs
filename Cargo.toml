@@ -1,0 +1,9 @@
+[package]
+
+name = "bencoding-rs"
+version = "0.0.1"
+authors = ["Gaetan André <rvlander@gaetanandre.eu>"]
+
+[[bin]]
+
+name = "bencode"
