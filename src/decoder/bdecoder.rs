@@ -49,7 +49,20 @@ impl  <'a> BDecoder <'a> {
 	}
 
 	fn parse_list(&mut self) -> Result<BValue, &str> {
-		Err("Error: bcode could not be parsed: not supported yet !")
+		let mut res = Vec<BValue>::new();
+		let next = 'x';
+		do {
+			res.push(self.parse());
+			next = match self.to_parse.next() {
+				Some(a) => a,
+				None => return Err("Error: bcode could not be parsed: premature end of input !"),
+			}
+		} while (next == ':');
+		match next {
+			'e' => Ok(BValue::List(res)),
+			_  => Err("Error: bcode could not be parsed: char not expected ('e or ':' is expected)!")
+		}
+
 	}
 
 	fn parse_string(&mut self, cin: char) -> Result<BValue, &str> {
@@ -110,5 +123,14 @@ mod test {
 
 		decoder = BDecoder::new("0:");
 		assert_eq!(decoder.parse(), Ok(BValue::String(String::from_str(""))));	
+	}
+
+		#[test]
+	fn test_parse_integer() {
+		let mut decoder = BDecoder::new("l4:toto:i128ee");
+		let mut res = Vec<BValue>::new();
+		res.push(BValue::String(String::from_str("toto")));
+		res.push(BValue::List(BValue::Integer(128)));
+		assert_eq!(decoder.parse(), Ok(BValue::List(res));	
 	}
 }
