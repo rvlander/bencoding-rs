@@ -13,7 +13,7 @@ impl  <'a> BDecoder <'a> {
 		}
 	}
 
-	fn parse (&mut self) -> Result<BValue, &str> {
+	fn parse (&mut self) -> Result<BValue, &'a str> {
 		let opt = self.to_parse.next();
 		match opt {
 			Some(c) => match c {
@@ -36,11 +36,12 @@ impl  <'a> BDecoder <'a> {
 		}
 	}
 
-	fn parse_dictionnary(&self) -> Result<BValue, &str> {
-		Err("Error: bcode could not be parsed: not supported yet !")
+	fn parse_dictionnary(&self) -> Result<BValue, &'a str> {
+		Err("Error: unsupported !")
+		//let mut res : HashMap::<String, BValue>::new();
 	}
 
-	fn parse_integer(&mut self) -> Result<BValue, &str> {
+	fn parse_integer(&mut self) -> Result<BValue, &'a str> {
 		let integer: String = self.to_parse.by_ref().take_while(|&c| c != 'e').collect();
 		match integer.as_slice().parse::<i64>() {
 			Ok(a) => Ok(BValue::Integer(a)),
@@ -48,16 +49,20 @@ impl  <'a> BDecoder <'a> {
 		}	
 	}
 
-	fn parse_list(&mut self) -> Result<BValue, &str> {
-		let mut res = Vec<BValue>::new();
-		let next = 'x';
-		do {
-			res.push(self.parse());
+	fn parse_list(&mut self) -> Result<BValue, &'a str> {
+		let mut res = Vec::<BValue>::new();
+		let mut next = 'x';
+		while {
+			match self.parse() {
+				Ok(bvalue) => res.push(bvalue),
+				Err(err) => return Err(err),
+			};
 			next = match self.to_parse.next() {
 				Some(a) => a,
 				None => return Err("Error: bcode could not be parsed: premature end of input !"),
-			}
-		} while (next == ':');
+			};
+			next == ':'
+		} {};
 		match next {
 			'e' => Ok(BValue::List(res)),
 			_  => Err("Error: bcode could not be parsed: char not expected ('e or ':' is expected)!")
@@ -65,7 +70,7 @@ impl  <'a> BDecoder <'a> {
 
 	}
 
-	fn parse_string(&mut self, cin: char) -> Result<BValue, &str> {
+	fn parse_string(&mut self, cin: char) -> Result<BValue, &'a str> {
 		let mut semi = 'x';
 		let mut tail: String = self.to_parse.by_ref().take_while(|&c| {semi = c; is_num(c)}).collect();
 		tail.insert(0, cin);
@@ -125,12 +130,12 @@ mod test {
 		assert_eq!(decoder.parse(), Ok(BValue::String(String::from_str(""))));	
 	}
 
-		#[test]
-	fn test_parse_integer() {
+	#[test]
+	fn test_parse_list() {
 		let mut decoder = BDecoder::new("l4:toto:i128ee");
-		let mut res = Vec<BValue>::new();
+		let mut res = Vec::<BValue>::new();
 		res.push(BValue::String(String::from_str("toto")));
-		res.push(BValue::List(BValue::Integer(128)));
-		assert_eq!(decoder.parse(), Ok(BValue::List(res));	
+		res.push(BValue::Integer(128));
+		assert_eq!(decoder.parse(), Ok(BValue::List(res)));	
 	}
 }
