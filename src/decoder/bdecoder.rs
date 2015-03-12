@@ -8,13 +8,13 @@ struct BDecoder <'a> {
 
 impl  <'a> BDecoder <'a> {
 
-	fn new(to_parse: &'a str) -> BDecoder {
+	pub fn new(to_parse: &'a str) -> BDecoder {
 		BDecoder {
 			to_parse: to_parse.chars()
 		}
 	}
 
-	fn parse (&mut self) -> Result<BValue, &'a str> {
+	pub fn parse (&mut self) -> Result<BValue, &'a str> {
 		let opt = self.to_parse.next();
 		match opt {
 			Some(c) => match c {
