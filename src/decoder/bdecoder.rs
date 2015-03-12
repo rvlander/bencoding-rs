@@ -1,5 +1,6 @@
 use super::super::btree::bvalue::BValue;
 use std::str::Chars;
+use std::collections::HashMap;
 
 struct BDecoder <'a> {
 	to_parse: Chars<'a>
@@ -17,7 +18,7 @@ impl  <'a> BDecoder <'a> {
 		let opt = self.to_parse.next();
 		match opt {
 			Some(c) => match c {
-				'd' => self.parse_dictionnary(),
+				'd' => self.parse_dictionary(),
 				'i' => self.parse_integer(),
 				'l' => self.parse_list(),
 				'0' => self.parse_string(c),
@@ -36,9 +37,37 @@ impl  <'a> BDecoder <'a> {
 		}
 	}
 
-	fn parse_dictionnary(&self) -> Result<BValue, &'a str> {
-		Err("Error: unsupported !")
-		//let mut res : HashMap::<String, BValue>::new();
+	fn parse_dictionary(&mut self) -> Result<BValue, &'a str> {
+		let mut res = HashMap::<String, BValue>::new();
+		let mut next:char;
+		let mut key:String;
+		while {
+			match self.parse() {
+				Ok(BValue::String(k)) => key = k,
+				Err(err) => return Err(err),
+				_ => return Err("Error: bcode could not be parsed: dictionary key must be a string !"),
+			};
+			next = match self.to_parse.next() {
+				Some(a) => a,
+				None => return Err("Error: bcode could not be parsed: premature end of input !"),
+			};
+			if next != ':' {
+				return Err("Error: bcode could not be parsed: ':' expected !")
+			}
+			match self.parse() {
+				Ok(bvalue) => res.insert(key, bvalue),
+				Err(err) => return Err(err),
+			};
+			next = match self.to_parse.next() {
+				Some(a) => a,
+				None => return Err("Error: bcode could not be parsed: premature end of input !"),
+			};
+			next == ':'
+		} {};
+		match next {
+			'e' => Ok(BValue::Dictionary(res)),
+			_  => Err("Error: bcode could not be parsed: char not expected ('e or ':' is expected)!")
+		}
 	}
 
 	fn parse_integer(&mut self) -> Result<BValue, &'a str> {
@@ -51,7 +80,7 @@ impl  <'a> BDecoder <'a> {
 
 	fn parse_list(&mut self) -> Result<BValue, &'a str> {
 		let mut res = Vec::<BValue>::new();
-		let mut next = 'x';
+		let mut next:char;
 		while {
 			match self.parse() {
 				Ok(bvalue) => res.push(bvalue),
@@ -71,7 +100,7 @@ impl  <'a> BDecoder <'a> {
 	}
 
 	fn parse_string(&mut self, cin: char) -> Result<BValue, &'a str> {
-		let mut semi = 'x';
+		let mut semi = 'c';
 		let mut tail: String = self.to_parse.by_ref().take_while(|&c| {semi = c; is_num(c)}).collect();
 		tail.insert(0, cin);
 		match tail.as_slice().parse::<usize>() {
@@ -102,6 +131,7 @@ fn is_num(c: char) -> bool {
 mod test {
 	use super::BDecoder;
 	use super::super::super::btree::bvalue::BValue;
+	use std::collections::HashMap;
 
 	#[test]
 	fn test_parse_garbage() {
@@ -137,5 +167,20 @@ mod test {
 		res.push(BValue::String(String::from_str("toto")));
 		res.push(BValue::Integer(128));
 		assert_eq!(decoder.parse(), Ok(BValue::List(res)));	
+	}
+
+		#[test]
+	fn test_parse_dictionary() {
+		let mut decoder = BDecoder::new("d4:papa:l4:toto:i128ee:1:c:i25ee");
+		let mut map = HashMap::<String, BValue>::new();
+
+		let mut res = Vec::<BValue>::new();
+		res.push(BValue::String(String::from_str("toto")));
+		res.push(BValue::Integer(128));
+		
+		map.insert("papa".to_string(), BValue::List(res));
+		map.insert("c".to_string(), BValue::Integer(25));
+
+		assert_eq!(decoder.parse(), Ok(BValue::Dictionary(map)));	
 	}
 }
