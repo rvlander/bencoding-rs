@@ -1,7 +1,7 @@
 # bencoding-rs
-A simple beconding parser.
+A simple bencoding parser.
 
-This library aims at parsing Strings encoded in the Bencodding format described here:
+This library aims at parsing Strings encoded in the Bencoding format described here:
 https://wiki.theory.org/BitTorrentSpecification#Bencoding
 
 Example:
