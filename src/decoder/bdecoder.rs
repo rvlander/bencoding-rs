@@ -2,19 +2,19 @@ use super::super::btree::bvalue::BValue;
 use std::str::Chars;
 use std::collections::HashMap;
 
-struct BDecoder <'a> {
+pub struct BDecoder <'a> {
 	to_parse: Chars<'a>
 }
 
 impl  <'a> BDecoder <'a> {
 
-	pub fn new(to_parse: &'a str) -> BDecoder {
+	fn new(to_parse: &'a str) -> BDecoder {
 		BDecoder {
 			to_parse: to_parse.chars()
 		}
 	}
 
-	pub fn parse (&mut self) -> Result<BValue, &'a str> {
+	fn parse (&mut self) -> Result<BValue, &'a str> {
 		let opt = self.to_parse.next();
 		match opt {
 			Some(c) => match c {

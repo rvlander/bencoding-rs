@@ -6,7 +6,8 @@ https://wiki.theory.org/BitTorrentSpecification#Bencoding
 
 Example:
 ```rust
-use becoding-rs::bencoding::bdecoder;
+extern crate bencoding;
+use becoding::decoder::bdecoder::BDecoder;
 
 let mut decoder = BDecoder::new("d4:papa:l4:toto:i128ee:1:c:i25ee");
 ```
