@@ -16,59 +16,57 @@ impl  <'a> BDecoder <'a>{
 		}
 	}
 
-	pub fn parse (&mut self) -> Result<BValue, &'a str> {
-		let opt = self.to_parse.next();
-        match opt {
-            Some(c) => match *c as char {
-                'd' => self.parse_dictionary(),
-                'i' => self.parse_integer(),
-                'l' => self.parse_list(),
-                '0' => self.parse_string(*c),
-                '1' => self.parse_string(*c),
-                '2' => self.parse_string(*c),
-                '3' => self.parse_string(*c),
-                '4' => self.parse_string(*c),
-                '5' => self.parse_string(*c),
-                '6' => self.parse_string(*c),
-                '7' => self.parse_string(*c),
-                '8' => self.parse_string(*c),
-                '9' => self.parse_string(*c),
-                _ => Err("Error: bcode could not be parsed: char not expected !"),
-            },
-            None => Err("Error: bcode could not be parsed: premature end of input !"),
-        }
+	pub fn parse(&mut self) -> Result<BValue, &'a str> {
+		self.inner_parse(None)
 	}
+
+	fn inner_parse (&mut self, cin: Option<u8>) -> Result<BValue, &'a str> {
+		let next = match cin {
+			Some(a) => a,
+			None => match self.to_parse.next(){
+				Some(c) => *c,
+				None => return Err("Error: bcode could not be parsed: premature end of input !"),
+			},
+		};
+    	match next as char {
+            'd' => self.parse_dictionary(),
+            'i' => self.parse_integer(),
+            'l' => self.parse_list(),
+            '0' => self.parse_string(next),
+            '1' => self.parse_string(next),
+            '2' => self.parse_string(next),
+            '3' => self.parse_string(next),
+            '4' => self.parse_string(next),
+            '5' => self.parse_string(next),
+            '6' => self.parse_string(next),
+            '7' => self.parse_string(next),
+            '8' => self.parse_string(next),
+            '9' => self.parse_string(next),
+            _ => Err("Error: bcode could not be parsed: char not expected !"),
+        }
+    }
 
 	fn parse_dictionary(&mut self) -> Result<BValue, &'a str> {
 		let mut res = HashMap::<String, BValue>::new();
-		let mut next:u8;
+		let mut next:Option<u8> = None;
 		let mut key:String;
 		while {
-			match try!(self.parse()) {
+			match try!(self.inner_parse(next)) {
 				BValue::String(k) => key =  match String::from_utf8(k) {
 					Ok(str) => str,
 					_ => return Err("Error: bcode could not be parsed: dictionary key is not a valid UTF8 string !")
 				},
 				_ => return Err("Error: bcode could not be parsed: dictionary key must be a string !"),
 			};
-			next = match self.to_parse.next() {
+			res.insert(key, try!(self.inner_parse(None)));
+			let next_char = match self.to_parse.next() {
 				Some(a) => *a,
 				None => return Err("Error: bcode could not be parsed: premature end of input !"),
 			};
-			if next as char != ':' {
-				return Err("Error: bcode could not be parsed: ':' expected !")
-			}
-			res.insert(key, try!(self.parse()));
-			next = match self.to_parse.next() {
-				Some(a) => *a,
-				None => return Err("Error: bcode could not be parsed: premature end of input !"),
-			};
-			next as char == ':'
+			next = Some(next_char);
+			next_char as char != 'e'
 		} {};
-		match next as char {
-			'e' => Ok(BValue::Dictionary(res)),
-			_  => Err("Error: bcode could not be parsed: char not expected ('e or ':' is expected)!")
-		}
+		Ok(BValue::Dictionary(res))
 	}
 
 	fn parse_integer(&mut self) -> Result<BValue, &'a str> {
@@ -81,23 +79,20 @@ impl  <'a> BDecoder <'a>{
 
 	fn parse_list(&mut self) -> Result<BValue, &'a str> {
 		let mut res = Vec::<BValue>::new();
-		let mut next:u8;
+		let mut next: Option<u8> = None;
 		while {
-			match self.parse() {
+			match self.inner_parse(next) {
 				Ok(bvalue) => res.push(bvalue),
 				Err(err) => return Err(err),
 			};
-			next = match self.to_parse.next() {
+			let next_char = match self.to_parse.next() {
 				Some(a) => *a,
 				None => return Err("Error: bcode could not be parsed: premature end of input !"),
 			};
-			next == ':' as u8
+			next = Some(next_char);
+			next_char as char != 'e'
 		} {};
-		match next as char{
-			'e' => Ok(BValue::List(res)),
-			_  => Err("Error: bcode could not be parsed: char not expected ('e or ':' is expected)!")
-		}
-
+		Ok(BValue::List(res))
 	}
 
 	fn parse_string(&mut self, cin: u8) -> Result<BValue, &'a str> {
@@ -168,7 +163,7 @@ mod test {
 
 	#[test]
 	fn test_parse_list() {
-		let to_parse = "l4:toto:i128ee".to_string().into_bytes();
+		let to_parse = "l4:totoi128ee".to_string().into_bytes();
 		let mut decoder = BDecoder::new(&to_parse);
 		let mut res = Vec::<BValue>::new();
 		res.push(BValue::String(String::from_str("toto").into_bytes()));
@@ -178,7 +173,7 @@ mod test {
 
 		#[test]
 	fn test_parse_dictionary() {
-		let to_parse = "d4:papa:l4:toto:i128ee:1:c:i25ee".to_string().into_bytes();
+		let to_parse = "d4:papal4:totoi128ee1:ci25ee".to_string().into_bytes();
 		let mut decoder = BDecoder::new(&to_parse);
 		let mut map = HashMap::<String, BValue>::new();
 
@@ -187,7 +182,7 @@ mod test {
 		res.push(BValue::Integer(128));
 		
 		map.insert("papa".to_string(), BValue::List(res));
-		map.insert("c".to_string(), BValue::Integer(26));
+		map.insert("c".to_string(), BValue::Integer(25));
 
 		assert_eq!(decoder.parse(), Ok(BValue::Dictionary(map)));	
 	}
