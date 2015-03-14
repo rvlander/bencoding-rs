@@ -7,7 +7,7 @@ https://wiki.theory.org/BitTorrentSpecification#Bencoding
 Example:
 ```rust
 extern crate bencoding;
-use becoding::decoder::bdecoder::BDecoder;
+use bencoding::decoder::bdecoder::BDecoder;
 
 let mut decoder = BDecoder::new("d4:papa:l4:toto:i128ee:1:c:i25ee");
 ```
@@ -16,7 +16,7 @@ which should result in the following data structure:
 Ok(
 	Dictionary({
 		"papa": List([
-			String("toto"),
+			String([116, 111, 116, 111]), //byte encoding of "toto"
 			Integer(128)
 		]),
 		"c": Integer(25)
@@ -29,7 +29,7 @@ This structure is built using the following type:
 pub enum BValue {
 	Dictionary(HashMap<String, BValue>),
 	List(Vec<BValue>),
-	String(String),
+	String(Vec<u8>),
 	Integer(i64),
 }
 ```

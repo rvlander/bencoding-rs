@@ -1,36 +1,38 @@
-use super::super::btree::bvalue::BValue;
-use std::str::Chars;
-use std::collections::HashMap;
+extern crate core;
 
-pub struct BDecoder <'a> {
-	to_parse: Chars<'a>
+use super::super::btree::bvalue::BValue;
+use std::collections::HashMap;
+use self::core::slice::Iter;
+
+struct BDecoder <'a>{
+	to_parse: Iter<'a, u8>
 }
 
-impl  <'a> BDecoder <'a> {
+impl  <'a> BDecoder <'a>{
 
-	pub fn new(to_parse: &'a str) -> BDecoder {
+	pub fn new(to_parse: &'a Vec<u8>) -> BDecoder <'a> {
 		BDecoder {
-			to_parse: to_parse.chars()
+			to_parse: to_parse.iter()
 		}
 	}
 
 	pub fn parse (&mut self) -> Result<BValue, &'a str> {
 		let opt = self.to_parse.next();
         match opt {
-            Some(c) => match c {
+            Some(c) => match *c as char {
                 'd' => self.parse_dictionary(),
                 'i' => self.parse_integer(),
                 'l' => self.parse_list(),
-                '0' => self.parse_string(c),
-                '1' => self.parse_string(c),
-                '2' => self.parse_string(c),
-                '3' => self.parse_string(c),
-                '4' => self.parse_string(c),
-                '5' => self.parse_string(c),
-                '6' => self.parse_string(c),
-                '7' => self.parse_string(c),
-                '8' => self.parse_string(c),
-                '9' => self.parse_string(c),
+                '0' => self.parse_string(*c),
+                '1' => self.parse_string(*c),
+                '2' => self.parse_string(*c),
+                '3' => self.parse_string(*c),
+                '4' => self.parse_string(*c),
+                '5' => self.parse_string(*c),
+                '6' => self.parse_string(*c),
+                '7' => self.parse_string(*c),
+                '8' => self.parse_string(*c),
+                '9' => self.parse_string(*c),
                 _ => Err("Error: bcode could not be parsed: char not expected !"),
             },
             None => Err("Error: bcode could not be parsed: premature end of input !"),
@@ -39,35 +41,38 @@ impl  <'a> BDecoder <'a> {
 
 	fn parse_dictionary(&mut self) -> Result<BValue, &'a str> {
 		let mut res = HashMap::<String, BValue>::new();
-		let mut next:char;
+		let mut next:u8;
 		let mut key:String;
 		while {
 			match try!(self.parse()) {
-				BValue::String(k) => key = k,
+				BValue::String(k) => key =  match String::from_utf8(k) {
+					Ok(str) => str,
+					_ => return Err("Error: bcode could not be parsed: dictionary key is not a valid UTF8 string !")
+				},
 				_ => return Err("Error: bcode could not be parsed: dictionary key must be a string !"),
 			};
 			next = match self.to_parse.next() {
-				Some(a) => a,
+				Some(a) => *a,
 				None => return Err("Error: bcode could not be parsed: premature end of input !"),
 			};
-			if next != ':' {
+			if next as char != ':' {
 				return Err("Error: bcode could not be parsed: ':' expected !")
 			}
 			res.insert(key, try!(self.parse()));
 			next = match self.to_parse.next() {
-				Some(a) => a,
+				Some(a) => *a,
 				None => return Err("Error: bcode could not be parsed: premature end of input !"),
 			};
-			next == ':'
+			next as char == ':'
 		} {};
-		match next {
+		match next as char {
 			'e' => Ok(BValue::Dictionary(res)),
 			_  => Err("Error: bcode could not be parsed: char not expected ('e or ':' is expected)!")
 		}
 	}
 
 	fn parse_integer(&mut self) -> Result<BValue, &'a str> {
-		let integer: String = self.to_parse.by_ref().take_while(|&c| c != 'e').collect();
+		let integer: String = self.to_parse.by_ref().map(|c| *c as char).take_while(|&c| c != 'e').collect();
 		match integer.as_slice().parse::<i64>() {
 			Ok(a) => Ok(BValue::Integer(a)),
 			Err(_) => Err("Error: bcode could not be parsed: integer malformed"),
@@ -76,33 +81,33 @@ impl  <'a> BDecoder <'a> {
 
 	fn parse_list(&mut self) -> Result<BValue, &'a str> {
 		let mut res = Vec::<BValue>::new();
-		let mut next:char;
+		let mut next:u8;
 		while {
 			match self.parse() {
 				Ok(bvalue) => res.push(bvalue),
 				Err(err) => return Err(err),
 			};
 			next = match self.to_parse.next() {
-				Some(a) => a,
+				Some(a) => *a,
 				None => return Err("Error: bcode could not be parsed: premature end of input !"),
 			};
-			next == ':'
+			next == ':' as u8
 		} {};
-		match next {
+		match next as char{
 			'e' => Ok(BValue::List(res)),
 			_  => Err("Error: bcode could not be parsed: char not expected ('e or ':' is expected)!")
 		}
 
 	}
 
-	fn parse_string(&mut self, cin: char) -> Result<BValue, &'a str> {
+	fn parse_string(&mut self, cin: u8) -> Result<BValue, &'a str> {
 		let mut semi = 'c';
-		let mut tail: String = self.to_parse.by_ref().take_while(|&c| {semi = c; is_num(c)}).collect();
-		tail.insert(0, cin);
+		let mut tail: String = self.to_parse.by_ref().map(|c| *c as char).take_while(|&c| {semi = c; is_num(c)}).collect();
+		tail.insert(0, cin as char);
 		match tail.as_slice().parse::<usize>() {
 			Ok(a) => {
-				if semi !=':' {return Err("Error: bcode could not be parsed: ':' expected!")};
-				let res: String = self.to_parse.by_ref().take(a).collect();
+				if semi != ':' {return Err("Error: bcode could not be parsed: ':' expected!")};
+				let res: Vec<u8> = self.to_parse.by_ref().map(|c| *c).take(a).collect();
 				Ok(BValue::String(res))
 			},
 			Err(_) => Err("Error: bcode could not be parsed: string size malformed !"), 
@@ -131,51 +136,58 @@ mod test {
 
 	#[test]
 	fn test_parse_garbage() {
-		let mut decoder = BDecoder::new("garbage");
+		let to_parse = "garbage".to_string().into_bytes();
+		let mut decoder = BDecoder::new(&to_parse);
 		assert_eq!(decoder.parse(), Err("Error: bcode could not be parsed: char not expected !"));
 	}
 
 	#[test]
 	fn test_parse_eoi() {
-		let mut decoder = BDecoder::new("");
+		let to_parse = "".to_string().into_bytes();
+		let mut decoder = BDecoder::new(&to_parse);
 		assert_eq!(decoder.parse(), Err("Error: bcode could not be parsed: premature end of input !"));	
 	}
 
 	#[test]
 	fn test_parse_integer() {
-		let mut decoder = BDecoder::new("i128e");
+		let to_parse = "i128e".to_string().into_bytes();
+		let mut decoder = BDecoder::new(&to_parse);
 		assert_eq!(decoder.parse(), Ok(BValue::Integer(128)));	
 	}
 
 	#[test]
 	fn test_parse_string() {
-		let mut decoder = BDecoder::new("4:toto");
-		assert_eq!(decoder.parse(), Ok(BValue::String(String::from_str("toto"))));
+		let to_parse = "4:toto".to_string().into_bytes();
+		let mut decoder = BDecoder::new(&to_parse);
+		assert_eq!(decoder.parse(), Ok(BValue::String(String::from_str("toto").into_bytes())));
 
-		decoder = BDecoder::new("0:");
-		assert_eq!(decoder.parse(), Ok(BValue::String(String::from_str(""))));	
+		let to_parse1 = "0:".to_string().into_bytes();
+		let mut decoder1 = BDecoder::new(&to_parse1);
+		assert_eq!(decoder1.parse(), Ok(BValue::String(String::from_str("").into_bytes())));	
 	}
 
 	#[test]
 	fn test_parse_list() {
-		let mut decoder = BDecoder::new("l4:toto:i128ee");
+		let to_parse = "l4:toto:i128ee".to_string().into_bytes();
+		let mut decoder = BDecoder::new(&to_parse);
 		let mut res = Vec::<BValue>::new();
-		res.push(BValue::String(String::from_str("toto")));
+		res.push(BValue::String(String::from_str("toto").into_bytes()));
 		res.push(BValue::Integer(128));
 		assert_eq!(decoder.parse(), Ok(BValue::List(res)));	
 	}
 
 		#[test]
 	fn test_parse_dictionary() {
-		let mut decoder = BDecoder::new("d4:papa:l4:toto:i128ee:1:c:i25ee");
+		let to_parse = "d4:papa:l4:toto:i128ee:1:c:i25ee".to_string().into_bytes();
+		let mut decoder = BDecoder::new(&to_parse);
 		let mut map = HashMap::<String, BValue>::new();
 
 		let mut res = Vec::<BValue>::new();
-		res.push(BValue::String(String::from_str("toto")));
+		res.push(BValue::String(String::from_str("toto").into_bytes()));
 		res.push(BValue::Integer(128));
 		
 		map.insert("papa".to_string(), BValue::List(res));
-		map.insert("c".to_string(), BValue::Integer(25));
+		map.insert("c".to_string(), BValue::Integer(26));
 
 		assert_eq!(decoder.parse(), Ok(BValue::Dictionary(map)));	
 	}

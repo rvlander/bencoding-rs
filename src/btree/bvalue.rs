@@ -4,6 +4,6 @@ use std::collections::HashMap;
 pub enum BValue {
 	Dictionary(HashMap<String, BValue>),
 	List(Vec<BValue>),
-	String(String),
+	String(Vec<u8>),
 	Integer(i64),
 }
