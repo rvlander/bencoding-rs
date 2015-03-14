@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 pub enum BValue {
 	Dictionary(HashMap<String, BValue>),
 	List(Vec<BValue>),
