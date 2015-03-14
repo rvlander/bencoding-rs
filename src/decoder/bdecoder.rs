@@ -4,7 +4,7 @@ use super::super::btree::bvalue::BValue;
 use std::collections::HashMap;
 use self::core::slice::Iter;
 
-struct BDecoder <'a>{
+pub struct BDecoder <'a>{
 	to_parse: Iter<'a, u8>
 }
 
