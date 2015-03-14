@@ -16,25 +16,25 @@ impl  <'a> BDecoder <'a> {
 
 	pub fn parse (&mut self) -> Result<BValue, &'a str> {
 		let opt = self.to_parse.next();
-		match opt {
-			Some(c) => match c {
-				'd' => self.parse_dictionary(),
-				'i' => self.parse_integer(),
-				'l' => self.parse_list(),
-				'0' => self.parse_string(c),
-				'1' => self.parse_string(c),
-				'2' => self.parse_string(c),
-				'3' => self.parse_string(c),
-				'4' => self.parse_string(c),
-				'5' => self.parse_string(c),
-				'6' => self.parse_string(c),
-				'7' => self.parse_string(c),
-				'8' => self.parse_string(c),
-				'9' => self.parse_string(c),
-				_ => Err("Error: bcode could not be parsed: char not expected !"),
-			},
-			None => Err("Error: bcode could not be parsed: premature end of input !"),
-		}
+        match opt {
+            Some(c) => match c {
+                'd' => self.parse_dictionary(),
+                'i' => self.parse_integer(),
+                'l' => self.parse_list(),
+                '0' => self.parse_string(c),
+                '1' => self.parse_string(c),
+                '2' => self.parse_string(c),
+                '3' => self.parse_string(c),
+                '4' => self.parse_string(c),
+                '5' => self.parse_string(c),
+                '6' => self.parse_string(c),
+                '7' => self.parse_string(c),
+                '8' => self.parse_string(c),
+                '9' => self.parse_string(c),
+                _ => Err("Error: bcode could not be parsed: char not expected !"),
+            },
+            None => Err("Error: bcode could not be parsed: premature end of input !"),
+        }
 	}
 
 	fn parse_dictionary(&mut self) -> Result<BValue, &'a str> {
@@ -42,9 +42,8 @@ impl  <'a> BDecoder <'a> {
 		let mut next:char;
 		let mut key:String;
 		while {
-			match self.parse() {
-				Ok(BValue::String(k)) => key = k,
-				Err(err) => return Err(err),
+			match try!(self.parse()) {
+				BValue::String(k) => key = k,
 				_ => return Err("Error: bcode could not be parsed: dictionary key must be a string !"),
 			};
 			next = match self.to_parse.next() {
@@ -54,10 +53,7 @@ impl  <'a> BDecoder <'a> {
 			if next != ':' {
 				return Err("Error: bcode could not be parsed: ':' expected !")
 			}
-			match self.parse() {
-				Ok(bvalue) => res.insert(key, bvalue),
-				Err(err) => return Err(err),
-			};
+			res.insert(key, try!(self.parse()));
 			next = match self.to_parse.next() {
 				Some(a) => a,
 				None => return Err("Error: bcode could not be parsed: premature end of input !"),
