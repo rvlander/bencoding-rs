@@ -1,5 +1,6 @@
 extern crate bencoding;
 use bencoding::decoder::bdecoder::BDecoder;
+use bencoding::encoder::bencoder::bencode;
 
 use std::io::prelude::*;
 use std::fs::File;
@@ -30,4 +31,12 @@ fn main() {
     };
     println!("{:?}", decoded);
 
+    let encoded = bencode(decoded.clone());
+    let mut decoder2 = BDecoder::new(&encoded);
+    /*let decoded2 = match decoder.parse() {
+        Ok(a) => a,
+        Err(err) => panic!("parsing error {}", err),
+    };
+
+    assert_eq!(decoded, decoded2);*/
 }
