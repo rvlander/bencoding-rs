@@ -9,39 +9,39 @@ pub enum BValue {
 }
 
 impl BValue {
-	pub fn as_dictionary(self) -> Result<HashMap<String, BValue>, &'static str> {
+	pub fn as_dictionary(self) -> Result<HashMap<String, BValue>, String> {
 		match self {
 			BValue::Dictionary(map) => Ok(map),
-			_ => Err("BValue is not a dictionnary"),
+			_ => Err("BValue is not a dictionnary".to_string()),
 		}
 	}
 
-	pub fn as_list(self) -> Result<Vec<BValue>, &'static str> {
+	pub fn as_list(self) -> Result<Vec<BValue>, String> {
 		match self {
 			BValue::List(list) => Ok(list),
-			_ => Err("BValue is not a list"),
+			_ => Err("BValue is not a list".to_string()),
 		}
 	}
 
-	pub fn as_bytes(self) -> Result<Vec<u8>, &'static str> {
+	pub fn as_bytes(self) -> Result<Vec<u8>, String> {
 		match self {
 			BValue::String(bytes) => Ok(bytes),
-			_ => Err("BValue is not a byte string"),
+			_ => Err("BValue is not a byte string".to_string()),
 		}
 	}
 
-	pub fn as_string(self) -> Result<String, &'static str> {
+	pub fn as_string(self) -> Result<String, String> {
 		let list = try!(self.as_bytes());
 		match String::from_utf8(list) {
 			Ok(string) => Ok(string),
-			_ => Err("BValue byte string is not convertible to utf8"),
+			_ => Err("BValue byte string is not convertible to utf8".to_string()),
 		}
 	}
 
-	pub fn as_integer(self) -> Result<i64, &'static str> {
+	pub fn as_integer(self) -> Result<i64, String> {
 		match self {
 			BValue::Integer(integer) => Ok(integer),
-			_ => Err("BValue is not an integer"),
+			_ => Err("BValue is not an integer".to_string()),
 		}
 	}
 }
@@ -57,7 +57,7 @@ mod test {
 		assert_eq!(Ok(23), integer.as_integer());	
 
 		let list = BValue::List(vec![BValue::Integer(23)]);
-		assert_eq!(Err("BValue is not an integer"), list.as_integer());
+		assert_eq!(Err("BValue is not an integer".to_string()), list.as_integer());
 	}
 
 	#[test]
@@ -66,7 +66,7 @@ mod test {
 		assert_eq!(Ok(vec![116, 111, 116, 111]), bytes.as_bytes());	
 
 		let list = BValue::List(vec![BValue::Integer(23)]);
-		assert_eq!(Err("BValue is not a byte string"), list.as_bytes());
+		assert_eq!(Err("BValue is not a byte string".to_string()), list.as_bytes());
 	}
 
 	#[test]
@@ -75,7 +75,7 @@ mod test {
 		assert_eq!(Ok("toto".to_string()), bytes.as_string());	
 
 		let list = BValue::List(vec![BValue::Integer(23)]);
-		assert_eq!(Err("BValue is not a byte string"), list.as_string());
+		assert_eq!(Err("BValue is not a byte string".to_string()), list.as_string());
 	}
 
 	#[test]
@@ -90,7 +90,7 @@ mod test {
 		assert_eq!(Ok(res1), BValue::List(res).as_list());	
 
 		let list = BValue::Integer(23);
-		assert_eq!(Err("BValue is not a list"), list.as_list());
+		assert_eq!(Err("BValue is not a list".to_string()), list.as_list());
 	}
 
 	#[test]
@@ -115,7 +115,7 @@ mod test {
 		assert_eq!(Ok(map1), BValue::Dictionary(map).as_dictionary());	
 
 		let list = BValue::List(vec![BValue::Integer(23)]);
-		assert_eq!(Err("BValue is not a dictionnary"), list.as_dictionary());
+		assert_eq!(Err("BValue is not a dictionnary".to_string()), list.as_dictionary());
 	}
 
 
