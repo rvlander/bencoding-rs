@@ -30,12 +30,10 @@ fn main() {
         Err(err) => panic!("parsing error {}", err),
     };
 
-    println!("\n\n\n\n\n");
-
     let mut encoded = bencode(decoded.clone());
 
     let mut decoder2 = BDecoder::new(&encoded);
-    let decoded2 = match decoder.parse() {
+    let decoded2 = match decoder2.parse() {
         Ok(a) => a,
         Err(err) => panic!("parsing error {}", err),
     };

@@ -1,7 +1,7 @@
 # bencoding-rs
 A simple bencoding parser.
 
-This library aims at parsing Strings encoded in the Bencoding format described here:
+This library aims at parsing Vec<u8> encoded in the Bencoding format described here:
 https://wiki.theory.org/BitTorrentSpecification#Bencoding
 
 Example:
@@ -32,4 +32,15 @@ pub enum BValue {
 	String(Vec<u8>),
 	Integer(i64),
 }
+```
+It can also encode such a structure to a bencoded Vec<u8>
+Example:
+```rust
+extern crate bencoding;
+use bencoding::encoder::bencoder::bencode;
+
+let foo: BValue;
+/* ... obtain / modify a BValue in any way ... */
+
+let mut bencoded = bencode(foo);
 ```
