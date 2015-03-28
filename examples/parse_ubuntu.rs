@@ -4,6 +4,8 @@ use bencoding::encoder::bencoder::bencode;
 
 use std::io::prelude::*;
 use std::fs::File;
+use std::path::Path;
+use std::error::Error;
 
 fn main() {
     // Create a path to the desired file
@@ -13,14 +15,14 @@ fn main() {
     // Open the path in read-only mode, returns `IoResult<File>`
     let mut file = match File::open(&path) {
         // The `desc` field of `IoError` is a string that describes the error
-        Err(why) => panic!("couldn't open {}: {}", display, why.description()),
+        Err(why) => panic!("couldn't open {}: {}", display, Error::description(&why)),
         Ok(file) => file,
     };
 
     // Read the file contents into a string, returns `IoResult<String>`
     let mut to_parse = Vec::<u8>::new();
     match file.read_to_end(&mut to_parse) {
-        Err(why) => panic!("couldn't read {}: {}", display, why.description()),
+        Err(why) => panic!("couldn't read {}: {}", display, Error::description(&why)),
         Ok(file) => (), 
     }
 

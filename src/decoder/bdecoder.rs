@@ -11,21 +11,16 @@ pub struct BDecoder <'a>{
 impl  <'a> BDecoder <'a>{
 
 	pub fn new(to_parse: &'a Vec<u8>) -> BDecoder <'a> {
-		let toto : Vec<u8> = to_parse.clone().iter().take(10).map(|c| *c).collect();
-		let bd = BDecoder {
+		BDecoder {
 			to_parse: to_parse.iter()
-		};
-		let toti : Vec<u8> = bd.to_parse.clone().take(10).map(|c| *c).collect();
-		bd
+		}
 	}
 
 	pub fn parse(&mut self) -> Result<BValue, String> {
-		let toto : Vec<u8> = self.to_parse.clone().take(10).map(|c| *c).collect();
 		self.inner_parse(None)
 	}
 
 	fn inner_parse (&mut self, cin: Option<u8>) -> Result<BValue, String> {
-		let toto : Vec<u8> = self.to_parse.clone().take(10).map(|c| *c).collect();
 		let next = match cin {
 			Some(a) => a,
 			None => match self.to_parse.next(){
@@ -76,7 +71,7 @@ impl  <'a> BDecoder <'a>{
 
 	fn parse_integer(&mut self) -> Result<BValue, String> {
 		let integer: String = self.to_parse.by_ref().map(|c| *c as char).take_while(|&c| c != 'e').collect();
-		match integer.as_slice().parse::<i64>() {
+		match (&integer).parse::<i64>() {
 			Ok(a) => Ok(BValue::Integer(a)),
 			Err(_) => self.parse_error("integer malformed"),
 		}	
@@ -104,7 +99,7 @@ impl  <'a> BDecoder <'a>{
 		let mut semi = 'c';
 		let mut tail: String = self.to_parse.by_ref().map(|c| *c as char).take_while(|&c| {semi = c; is_num(c)}).collect();
 		tail.insert(0, cin as char);
-		match tail.as_slice().parse::<usize>() {
+		match (&tail).parse::<usize>() {
 			Ok(a) => {
 				if semi != ':' {return self.parse_error("':' expected")};
 				let res: Vec<u8> = self.to_parse.by_ref().map(|c| *c).take(a).collect();
@@ -121,7 +116,7 @@ impl  <'a> BDecoder <'a>{
 		error.push_str(" Precedes : ");
 		let follows: Vec<u8> = self.to_parse.by_ref().take(20).map(|c| *c).collect();
 		match String::from_utf8(follows) {
-			Ok(a) => error.push_str(a.as_slice()),
+			Ok(a) => error.push_str(&a),
 			_=> return Err("can not display following bytes".to_string()),
 		}
 		return Err(error);

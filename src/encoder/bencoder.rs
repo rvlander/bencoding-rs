@@ -97,9 +97,8 @@ mod test {
 		assert_eq!(bencoded, bencode(BValue::List(res)));	
 	}
 
-		#[test]
+	#[test]
 	fn test_parse_dictionary() {
-		let bencoded = "d4:papal4:totoi128ee1:ci25ee".to_string().into_bytes();
 		let mut map = HashMap::<String, BValue>::new();
 
 		let mut res = Vec::<BValue>::new();
