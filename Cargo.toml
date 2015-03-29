@@ -3,3 +3,7 @@
 name = "bencoding"
 version = "0.0.1"
 authors = ["Gaetan André <rvlander@gaetanandre.eu>"]
+
+[dependencies.linked-hash-map]
+
+git = "https://github.com/contain-rs/linked-hash-map.git"

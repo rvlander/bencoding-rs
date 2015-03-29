@@ -23,7 +23,7 @@ fn main() {
     let mut to_parse = Vec::<u8>::new();
     match file.read_to_end(&mut to_parse) {
         Err(why) => panic!("couldn't read {}: {}", display, Error::description(&why)),
-        Ok(file) => (), 
+        Ok(_) => (), 
     }
 
 	let mut decoder = BDecoder::new(&to_parse);

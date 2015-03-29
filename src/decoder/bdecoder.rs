@@ -1,8 +1,12 @@
 extern crate core;
 
 use super::super::btree::bvalue::BValue;
-use std::collections::HashMap;
+
+extern crate linked_hash_map;
+use self::linked_hash_map::LinkedHashMap;
+
 use self::core::slice::Iter;
+
 
 pub struct BDecoder <'a>{
 	to_parse: Iter<'a, u8>
@@ -47,7 +51,7 @@ impl  <'a> BDecoder <'a>{
     }
 
 	fn parse_dictionary(&mut self) -> Result<BValue, String> {
-		let mut res = HashMap::<String, BValue>::new();
+		let mut res = LinkedHashMap::<String, BValue>::new();
 		let mut next:Option<u8> = None;
 		let mut key:String;
 		while {
@@ -140,7 +144,7 @@ fn is_num(c: char) -> bool {
 mod test {
 	use super::BDecoder;
 	use super::super::super::btree::bvalue::BValue;
-	use std::collections::HashMap;
+	use super::linked_hash_map::LinkedHashMap;
 
 	#[test]
 	fn test_parse_garbage() {
@@ -188,7 +192,7 @@ mod test {
 	fn test_parse_dictionary() {
 		let to_parse = "d4:papal4:totoi128ee1:ci25ee".to_string().into_bytes();
 		let mut decoder = BDecoder::new(&to_parse);
-		let mut map = HashMap::<String, BValue>::new();
+		let mut map = LinkedHashMap::<String, BValue>::new();
 
 		let mut res = Vec::<BValue>::new();
 		res.push(BValue::String(String::from_str("toto").into_bytes()));

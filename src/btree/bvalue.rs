@@ -1,15 +1,17 @@
-use std::collections::HashMap;
+extern crate linked_hash_map;
+use self::linked_hash_map::LinkedHashMap;
+
 
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub enum BValue {
-	Dictionary(HashMap<String, BValue>),
+	Dictionary(LinkedHashMap<String, BValue>),
 	List(Vec<BValue>),
 	String(Vec<u8>),
 	Integer(i64),
 }
 
 impl BValue {
-	pub fn as_dictionary(self) -> Result<HashMap<String, BValue>, String> {
+	pub fn as_dictionary(self) -> Result<LinkedHashMap<String, BValue>, String> {
 		match self {
 			BValue::Dictionary(map) => Ok(map),
 			_ => Err("BValue is not a dictionnary".to_string()),
@@ -49,7 +51,7 @@ impl BValue {
 #[cfg(test)]
 mod test {
 	use super::BValue;
-	use std::collections::HashMap;
+	use super::linked_hash_map::LinkedHashMap;
 
 	#[test]
 	fn test_as_integer() {
@@ -95,7 +97,7 @@ mod test {
 
 	#[test]
 	fn test_as_dictionary() {
-		let mut map = HashMap::<String, BValue>::new();
+		let mut map = LinkedHashMap::<String, BValue>::new();
 
 		let mut res = Vec::<BValue>::new();
 		res.push(BValue::String(String::from_str("toto").into_bytes()));
@@ -104,7 +106,7 @@ mod test {
 		map.insert("papa".to_string(), BValue::List(res));
 		map.insert("c".to_string(), BValue::Integer(25));
 
-		let mut map1 = HashMap::<String, BValue>::new();
+		let mut map1 = LinkedHashMap::<String, BValue>::new();
 
 		let mut res1 = Vec::<BValue>::new();
 		res1.push(BValue::String(String::from_str("toto").into_bytes()));
